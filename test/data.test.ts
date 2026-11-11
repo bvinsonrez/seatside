@@ -102,3 +102,10 @@ test('seat links in the crowd match the order data', () => {
 test('both sport packs are registered', () => {
   expect(Object.keys(packs).sort()).toEqual(['basketball', 'hockey']);
 });
+
+test('the newest seeded sign-ups mix link kinds', () => {
+  const newest = [...seedFans()].sort((a, b) => b.signupOrder - a.signupOrder).slice(0, 8);
+  const kinds = new Set(newest.map((f) => f.link.kind));
+  expect(kinds.has('seat-match')).toBe(true);
+  expect(kinds.has('holder')).toBe(true);
+});

@@ -74,6 +74,12 @@ export function generateCrowd(orders: TicketOrder[], count: number, seed: number
   while (seats.length < count - 4) seats.push({ section: sections[seats.length % sections.length], row: 'K', seat: String(20 + seats.length) });
   while (seats.length < count) seats.push(null);
 
+  // Sign-up order is shuffled so the newest rows on the dashboard look like a real mix of fans.
+  const order = Array.from({ length: count }, (_, i) => i + 1);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
   const used = new Set<string>();
   return seats.slice(0, count).map((seat, i) => {
     const link = matchSeat(orders, seat);
@@ -91,7 +97,7 @@ export function generateCrowd(orders: TicketOrder[], count: number, seed: number
       email: emailFor(name),
       seat,
       link,
-      signupOrder: i + 1,
+      signupOrder: order[i],
       signupBreakId: null,
       gamePoints: 25 + Math.floor(rng() * 45) * 5,
       plays,
@@ -113,7 +119,7 @@ export function seedFans(): Fan[] {
     email: emailFor('Jordan Reyes'),
     seat,
     link: matchSeat(orders, seat),
-    signupOrder: crowd.length + 1,
+    signupOrder: 0,
     signupBreakId: null,
     gamePoints: 120,
     plays: ['prediction', 'trivia'],
