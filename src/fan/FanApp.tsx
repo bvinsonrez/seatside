@@ -3,6 +3,9 @@ import { Home, ListOrdered, Gift, UserRound } from 'lucide-react';
 import { useDemo } from '../state/DemoContext';
 import JoinScreen from './JoinScreen';
 import LobbyScreen from './LobbyScreen';
+import PredictScreen from './PredictScreen';
+import TriviaScreen from './TriviaScreen';
+import BingoScreen from './BingoScreen';
 
 export type FanScreen = 'join' | 'lobby' | 'predict' | 'trivia' | 'bingo' | 'ranks' | 'rewards' | 'profile';
 
@@ -23,13 +26,17 @@ export default function FanApp() {
 
   if (!state.currentFanId) return <JoinScreen />;
 
+  const back = () => setScreen('lobby');
   const navActive = screen === 'predict' || screen === 'trivia' || screen === 'bingo' ? 'lobby' : screen;
 
   return (
     <>
       <main className="flex-1 overflow-y-auto">
         {screen === 'lobby' && <LobbyScreen go={setScreen} />}
-        {screen !== 'lobby' && <div className="p-6 pt-12 text-sm text-slate-500">Coming up: {screen}</div>}
+        {screen === 'predict' && <PredictScreen onBack={back} />}
+        {screen === 'trivia' && <TriviaScreen onBack={back} />}
+        {screen === 'bingo' && <BingoScreen onBack={back} />}
+        {(screen === 'ranks' || screen === 'rewards' || screen === 'profile') && <div className="p-6 pt-12 text-sm text-slate-500">Coming up: {screen}</div>}
       </main>
       <nav className="grid grid-cols-4 border-t border-slate-200 bg-white pb-4 pt-2">
         {NAV.map(({ id, label, Icon }) => (
