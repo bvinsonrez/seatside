@@ -7,8 +7,8 @@ export default function IdentityHeadline() {
   const tiles = [
     { id: 'signed', label: 'Signed up tonight', value: h.signedUp, accent: false },
     { id: 'shadow', label: 'Shadow fans identified', value: h.shadowFans, accent: true },
-    { id: 'matched', label: 'Linked by seat match', value: h.seatMatched, accent: false },
-    { id: 'noseat', label: 'No seat given', value: h.noSeat, accent: false },
+    { id: 'holders', label: 'Account holders', value: h.holders, accent: false },
+    { id: 'unlinked', label: 'Not linked yet', value: h.unlinked, accent: false },
   ];
   return (
     <section>
@@ -25,7 +25,7 @@ export default function IdentityHeadline() {
           </div>
         ))}
       </div>
-      <p className="mt-2 text-xs text-slate-500">Shadow fans are people in the building who did not buy the ticket. Seat match links them to the account holder who did.</p>
+      <p className="mt-2 text-xs text-slate-500">Shadow fans came in on someone else's ticket. A seat match links each one to the account holder who bought it, as a probable guest. Not linked yet: no seat given, or the seat matched no order.</p>
     </section>
   );
 }

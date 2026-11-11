@@ -16,7 +16,7 @@ test('signUp with qrSeat links as seat-match to the order holder and sets highli
   expect(fan.gamePoints).toBe(25);
   expect(s.highlightFanId).toBe(fan.id);
   expect(identityHeadline(s).shadowFans).toBe(before.shadowFans + 1);
-  expect(identityHeadline(s).seatMatched).toBe(before.seatMatched + 1);
+  expect(identityHeadline(s).holders).toBe(before.holders);
 });
 
 test('signUp from holder seat', () => {
@@ -124,7 +124,7 @@ test('redeemReward twice counts one redemption', () => {
   const s0 = run(initialState(), { type: 'viewAsFan', fanId: 'fan-returning' });
   const r = s0.rewards[0];
   const s = run(s0, { type: 'redeemReward', rewardId: r.id }, { type: 'redeemReward', rewardId: r.id });
-  expect(s.play.redeemed).toEqual([r.id]);
+  expect(s.play.redeemed['fan-returning']).toEqual([r.id]);
   const total = (st: DemoState) => Object.values(st.activation).reduce((n, a) => n + a.redemptions, 0);
   expect(total(s)).toBe(total(s0) + 1);
 });

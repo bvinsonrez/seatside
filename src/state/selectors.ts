@@ -9,9 +9,11 @@ export const activeBreak = (s: DemoState): BreakSlot | null => (s.activeBreakInd
 export function identityHeadline(s: DemoState) {
   return {
     signedUp: s.fans.length,
-    shadowFans: s.fans.filter((f) => f.link.kind !== 'holder').length,
-    seatMatched: s.fans.filter((f) => f.link.kind === 'seat-match').length,
-    noSeat: s.fans.filter((f) => f.link.kind === 'no-seat').length,
+    /** Came in on someone else's ticket: signed up from a non-holder seat in a known order. */
+    shadowFans: s.fans.filter((f) => f.link.kind === 'seat-match').length,
+    holders: s.fans.filter((f) => f.link.kind === 'holder').length,
+    /** Seat matched no order, or no seat given. We don't know who they came with. */
+    unlinked: s.fans.filter((f) => f.link.kind === 'no-match' || f.link.kind === 'no-seat').length,
   };
 }
 

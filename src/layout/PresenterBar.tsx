@@ -27,9 +27,15 @@ export default function PresenterBar() {
       <button className={btn} disabled={state.gameOver} onClick={() => dispatch({ type: 'endGame' })}>
         <Flag size={15} /> End game
       </button>
-      <button className={btn} onClick={() => dispatch({ type: 'viewAsFan', fanId: RETURNING_FAN_ID })}>
-        <UserRound size={15} /> View returning fan
-      </button>
+      {state.presenterFanId && state.currentFanId !== state.presenterFanId ? (
+        <button className={btn} onClick={() => dispatch({ type: 'viewAsFan', fanId: state.presenterFanId! })}>
+          <UserRound size={15} /> Back to my fan
+        </button>
+      ) : (
+        <button className={btn} onClick={() => dispatch({ type: 'viewAsFan', fanId: RETURNING_FAN_ID })}>
+          <UserRound size={15} /> View returning fan
+        </button>
+      )}
       {sports.length > 1 && (
         <label className="inline-flex items-center gap-1.5 text-sm">
           <span className="text-slate-300">Sport</span>

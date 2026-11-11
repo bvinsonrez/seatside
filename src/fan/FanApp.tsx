@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Home, ListOrdered, Gift, UserRound } from 'lucide-react';
 import { useDemo } from '../state/DemoContext';
+import { isPresenterView } from '../state/reducer';
 import JoinScreen from './JoinScreen';
 import LobbyScreen from './LobbyScreen';
 import PredictScreen from './PredictScreen';
@@ -30,15 +31,22 @@ export default function FanApp() {
   if (!state.currentFanId) return <JoinScreen />;
 
   const back = () => setScreen('lobby');
+  const isGame = screen === 'predict' || screen === 'trivia' || screen === 'bingo';
+  const canPlay = isPresenterView(state);
   const navActive = screen === 'predict' || screen === 'trivia' || screen === 'bingo' ? 'lobby' : screen;
 
   return (
     <>
       <main className="flex-1 overflow-y-auto">
         {screen === 'lobby' && <LobbyScreen go={setScreen} />}
-        {screen === 'predict' && <PredictScreen onBack={back} />}
-        {screen === 'trivia' && <TriviaScreen onBack={back} />}
-        {screen === 'bingo' && <BingoScreen onBack={back} />}
+        {isGame && !canPlay && (
+          <p className="m-4 mt-12 rounded-2xl bg-white p-6 text-center text-sm text-slate-500 shadow-sm">
+            You're viewing another fan. Use Back to my fan to keep playing.
+          </p>
+        )}
+        {canPlay && screen === 'predict' && <PredictScreen onBack={back} />}
+        {canPlay && screen === 'trivia' && <TriviaScreen onBack={back} />}
+        {canPlay && screen === 'bingo' && <BingoScreen onBack={back} />}
         {screen === 'ranks' && <RanksScreen />}
         {screen === 'rewards' && <RewardsScreen />}
         {screen === 'profile' && <ProfileScreen />}

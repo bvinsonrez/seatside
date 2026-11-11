@@ -28,7 +28,7 @@ export default function RewardsScreen() {
         </div>
         {state.rewards.map((r) => {
           const unlocked = pts >= r.unlockAt;
-          const redeemed = state.play.redeemed.includes(r.id);
+          const redeemed = (state.play.redeemed[fan.id] ?? []).includes(r.id);
           return (
             <div key={r.id} data-testid="reward-card" className={`rounded-2xl bg-white p-4 shadow-sm ${unlocked ? '' : 'opacity-70'}`}>
               <div className="flex items-start justify-between gap-3">

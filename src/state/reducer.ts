@@ -16,7 +16,8 @@ export interface PresenterPlay {
   bingoJoined: boolean;
   bingoLinesAwarded: number;
   triviaDoneBreakIds: string[];
-  redeemed: string[];
+  /** Rewards redeemed, keyed by fan id. */
+  redeemed: Record<string, string[]>;
 }
 
 export interface DemoState {
@@ -28,6 +29,8 @@ export interface DemoState {
   rewards: Reward[];
   fans: Fan[];
   currentFanId: string | null;
+  /** The fan the presenter signed up in this demo; games and points belong to this fan. */
+  presenterFanId: string | null;
   activeBreakIndex: number;
   eventIndex: number;
   lastEventLabel: string | null;
@@ -74,15 +77,19 @@ export function initialState(sport: SportId = 'hockey'): DemoState {
     rewards,
     fans,
     currentFanId: null,
+    presenterFanId: null,
     activeBreakIndex: -1,
     eventIndex: 0,
     lastEventLabel: null,
     gameOver: false,
-    play: { prediction: null, bingoCard: buildCard(pack), bingoMarked: [], bingoJoined: false, bingoLinesAwarded: 0, triviaDoneBreakIds: [], redeemed: [] },
+    play: { prediction: null, bingoCard: buildCard(pack), bingoMarked: [], bingoJoined: false, bingoLinesAwarded: 0, triviaDoneBreakIds: [], redeemed: {} },
     activation: baselineActivation(pack, fans),
     highlightFanId: null,
   };
 }
+
+/** True when the phone shows the presenter's own fan, the only fan who can play tonight's games. */
+export const isPresenterView = (s: DemoState): boolean => s.presenterFanId !== null && s.currentFanId === s.presenterFanId;
 
 const activeBreakOf = (s: DemoState): BreakSlot | null => (s.activeBreakIndex >= 0 ? s.pack.breaks[s.activeBreakIndex] : null);
 
@@ -100,11 +107,11 @@ function bump(s: DemoState, key: string, field: keyof ActivationStats): Record<s
 
 /** Award any bingo lines completed since the last award, if the fan has joined bingo. */
 function settleBingo(s: DemoState): DemoState {
-  if (!s.play.bingoJoined || !s.currentFanId) return s;
+  if (!s.play.bingoJoined || !s.presenterFanId) return s;
   const lines = completedLines(s.play.bingoCard, new Set(s.play.bingoMarked));
   const fresh = lines - s.play.bingoLinesAwarded;
   if (fresh <= 0) return s;
-  return { ...s, fans: updateFan(s, s.currentFanId, addPoints(fresh * BINGO_LINE_POINTS)), play: { ...s.play, bingoLinesAwarded: lines } };
+  return { ...s, fans: updateFan(s, s.presenterFanId, addPoints(fresh * BINGO_LINE_POINTS)), play: { ...s.play, bingoLinesAwarded: lines } };
 }
 
 export function reducer(s: DemoState, a: Action): DemoState {
@@ -129,6 +136,7 @@ export function reducer(s: DemoState, a: Action): DemoState {
         ...s,
         fans: [...s.fans, fan],
         currentFanId: fan.id,
+        presenterFanId: fan.id,
         highlightFanId: fan.id,
         activation: brk ? bump(s, brk.id, 'signups') : s.activation,
       };
@@ -153,7 +161,7 @@ export function reducer(s: DemoState, a: Action): DemoState {
         next = {
           ...next,
           play: { ...next.play, prediction: { ...p, result: correct ? 'correct' : 'incorrect' } },
-          fans: correct && next.currentFanId ? updateFan(next, next.currentFanId, addPoints(PREDICTION_POINTS)) : next.fans,
+          fans: correct && next.presenterFanId ? updateFan(next, next.presenterFanId, addPoints(PREDICTION_POINTS)) : next.fans,
         };
       }
       return settleBingo(next);
@@ -162,31 +170,31 @@ export function reducer(s: DemoState, a: Action): DemoState {
       return s.gameOver ? s : { ...s, gameOver: true };
     case 'lockPrediction': {
       const brk = activeBreakOf(s);
-      if (!s.currentFanId || brk?.mode !== 'prediction' || s.play.prediction) return s;
+      if (!isPresenterView(s) || brk?.mode !== 'prediction' || s.play.prediction) return s;
       return {
         ...s,
-        fans: updateFan(s, s.currentFanId, addPlay('prediction')),
+        fans: updateFan(s, s.presenterFanId!, addPlay('prediction')),
         play: { ...s.play, prediction: { choice: a.choice, breakId: brk.id, result: 'pending' } },
         activation: bump(s, brk.id, 'plays'),
       };
     }
     case 'completeTrivia': {
       const brk = activeBreakOf(s);
-      if (!s.currentFanId || brk?.mode !== 'trivia' || s.play.triviaDoneBreakIds.includes(brk.id)) return s;
+      if (!isPresenterView(s) || brk?.mode !== 'trivia' || s.play.triviaDoneBreakIds.includes(brk.id)) return s;
       const pts = Math.max(0, a.correctCount) * TRIVIA_POINTS_PER_CORRECT;
       return {
         ...s,
-        fans: updateFan(s, s.currentFanId, (f) => addPoints(pts)(addPlay('trivia')(f))),
+        fans: updateFan(s, s.presenterFanId!, (f) => addPoints(pts)(addPlay('trivia')(f))),
         play: { ...s.play, triviaDoneBreakIds: [...s.play.triviaDoneBreakIds, brk.id] },
         activation: bump(s, brk.id, 'plays'),
       };
     }
     case 'joinBingo': {
       const brk = activeBreakOf(s);
-      if (!s.currentFanId || brk?.mode !== 'bingo' || s.play.bingoJoined) return s;
+      if (!isPresenterView(s) || brk?.mode !== 'bingo' || s.play.bingoJoined) return s;
       return settleBingo({
         ...s,
-        fans: updateFan(s, s.currentFanId, addPlay('bingo')),
+        fans: updateFan(s, s.presenterFanId!, addPlay('bingo')),
         play: { ...s.play, bingoJoined: true },
         activation: bump(s, brk.id, 'plays'),
       });
@@ -194,9 +202,14 @@ export function reducer(s: DemoState, a: Action): DemoState {
     case 'redeemReward': {
       const fan = s.fans.find((f) => f.id === s.currentFanId);
       const reward = s.rewards.find((r) => r.id === a.rewardId);
-      if (!fan || !reward || s.play.redeemed.includes(reward.id) || seasonPoints(fan) < reward.unlockAt) return s;
+      const mine = fan ? s.play.redeemed[fan.id] ?? [] : [];
+      if (!fan || !reward || mine.includes(reward.id) || seasonPoints(fan) < reward.unlockAt) return s;
       const brk = s.pack.breaks.find((b) => b.sponsorId === reward.sponsorId);
-      return { ...s, play: { ...s.play, redeemed: [...s.play.redeemed, reward.id] }, activation: bump(s, brk?.id ?? SECTION_BATTLE, 'redemptions') };
+      return {
+        ...s,
+        play: { ...s.play, redeemed: { ...s.play.redeemed, [fan.id]: [...mine, reward.id] } },
+        activation: bump(s, brk?.id ?? SECTION_BATTLE, 'redemptions'),
+      };
     }
     case 'viewAsFan':
       return s.fans.some((f) => f.id === a.fanId) ? { ...s, currentFanId: a.fanId } : s;

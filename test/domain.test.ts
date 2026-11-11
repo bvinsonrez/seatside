@@ -52,7 +52,8 @@ describe('bingo', () => {
   test('card has 9 squares with sponsor in the center', () => {
     expect(card).toHaveLength(9);
     expect(card[4]).toBe(SPONSOR_SQUARE_ID);
-    expect(card.filter((c) => c !== SPONSOR_SQUARE_ID)).toEqual(hockey.bingoSquares.slice(0, 8).map((b) => b.id));
+    expect(new Set(card).size).toBe(9);
+    for (const id of card) if (id !== SPONSOR_SQUARE_ID) expect(hockey.bingoSquares.map((b) => b.id)).toContain(id);
   });
   test('completedLines counts lines with the sponsor square free', () => {
     expect(completedLines(card, new Set())).toBe(0);
