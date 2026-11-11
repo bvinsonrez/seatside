@@ -1,4 +1,5 @@
-import type { Fan, GameMode, GameRecord, Seat, SeatLink, TicketOrder } from '../types';
+import type { Fan, GameMode, GameRecord, Seat, TicketOrder } from '../types';
+import { matchSeat } from '../domain/seatMatch';
 
 const seatsFrom = (section: string, row: string, first: number, last: number): Seat[] =>
   Array.from({ length: last - first + 1 }, (_, i) => ({ section, row, seat: String(first + i) }));
@@ -50,15 +51,6 @@ function mulberry32(seed: number) {
   };
 }
 
-// Temporary link rule; Task 3 swaps this for domain/seatMatch.matchSeat.
-function linkFor(orders: TicketOrder[], seat: Seat | null): SeatLink {
-  if (!seat) return { kind: 'no-seat' };
-  const k = (s: Seat) => `${s.section}|${s.row}|${s.seat}`;
-  const o = orders.find((x) => x.seats.some((s) => k(s) === k(seat)));
-  if (!o) return { kind: 'no-match' };
-  return k(o.holderSeat) === k(seat) ? { kind: 'holder', orderId: o.id } : { kind: 'seat-match', orderId: o.id, holderName: o.holderName };
-}
-
 function history(rng: () => number, games: number): GameRecord[] {
   return Array.from({ length: games }, (_, i) => ({
     gameId: `g-${i + 1}`,
@@ -84,7 +76,7 @@ export function generateCrowd(orders: TicketOrder[], count: number, seed: number
 
   const used = new Set<string>();
   return seats.slice(0, count).map((seat, i) => {
-    const link = linkFor(orders, seat);
+    const link = matchSeat(orders, seat);
     let name: string;
     if (link.kind === 'holder') name = orders.find((o) => o.id === link.orderId)!.holderName;
     else {
@@ -120,7 +112,7 @@ export function seedFans(): Fan[] {
     name: 'Jordan Reyes',
     email: emailFor('Jordan Reyes'),
     seat,
-    link: linkFor(orders, seat),
+    link: matchSeat(orders, seat),
     signupOrder: crowd.length + 1,
     signupBreakId: null,
     gamePoints: 120,
