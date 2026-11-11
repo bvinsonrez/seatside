@@ -6,6 +6,9 @@ import LobbyScreen from './LobbyScreen';
 import PredictScreen from './PredictScreen';
 import TriviaScreen from './TriviaScreen';
 import BingoScreen from './BingoScreen';
+import RanksScreen from './RanksScreen';
+import RewardsScreen from './RewardsScreen';
+import ProfileScreen from './ProfileScreen';
 
 export type FanScreen = 'join' | 'lobby' | 'predict' | 'trivia' | 'bingo' | 'ranks' | 'rewards' | 'profile';
 
@@ -36,7 +39,9 @@ export default function FanApp() {
         {screen === 'predict' && <PredictScreen onBack={back} />}
         {screen === 'trivia' && <TriviaScreen onBack={back} />}
         {screen === 'bingo' && <BingoScreen onBack={back} />}
-        {(screen === 'ranks' || screen === 'rewards' || screen === 'profile') && <div className="p-6 pt-12 text-sm text-slate-500">Coming up: {screen}</div>}
+        {screen === 'ranks' && <RanksScreen />}
+        {screen === 'rewards' && <RewardsScreen />}
+        {screen === 'profile' && <ProfileScreen />}
       </main>
       <nav className="grid grid-cols-4 border-t border-slate-200 bg-white pb-4 pt-2">
         {NAV.map(({ id, label, Icon }) => (
