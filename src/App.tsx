@@ -1,3 +1,10 @@
+import { DemoProvider } from './state/DemoContext';
+import DemoStage from './layout/DemoStage';
+
 export default function App() {
-  return <h1>Seatside</h1>;
+  return (
+    <DemoProvider>
+      <DemoStage />
+    </DemoProvider>
+  );
 }
