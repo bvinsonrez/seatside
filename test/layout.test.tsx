@@ -29,3 +29,21 @@ test('theme variable is set from config', () => {
   const stage = screen.getByTestId('demo-stage');
   expect(stage.style.getPropertyValue('--team-primary')).toBe('#0B3D91');
 });
+
+test('switching sport resets state and changes the prediction prompt', async () => {
+  const { within } = await import('@testing-library/react');
+  const { basketball } = await import('../src/content/basketball');
+  render(<App />);
+  fireEvent.change(screen.getByLabelText(/your name/i), { target: { value: 'Pat Demo' } });
+  fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'pat@example.com' } });
+  fireEvent.click(screen.getByRole('button', { name: /join tonight's game/i }));
+  fireEvent.change(screen.getByLabelText('Sport'), { target: { value: 'basketball' } });
+  const phone = within(screen.getByTestId('phone-frame'));
+  expect(phone.getByRole('button', { name: /join tonight's game/i })).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText(/your name/i), { target: { value: 'Pat Demo' } });
+  fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'pat@example.com' } });
+  fireEvent.click(phone.getByRole('button', { name: /join tonight's game/i }));
+  fireEvent.click(screen.getByRole('button', { name: /next break/i }));
+  fireEvent.click(phone.getByRole('button', { name: /play now/i }));
+  expect(phone.getByText(basketball.predictionPrompt)).toBeInTheDocument();
+});

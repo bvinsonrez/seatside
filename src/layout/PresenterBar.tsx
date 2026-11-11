@@ -40,7 +40,7 @@ export default function PresenterBar() {
             onChange={(e) => dispatch({ type: 'switchSport', sport: e.target.value as SportId })}
           >
             {sports.map((id) => (
-              <option key={id} value={id} className="text-slate-900">{packs[id]!.displayName}</option>
+              <option key={id} value={id} className="text-slate-900">{packs[id].displayName}</option>
             ))}
           </select>
         </label>

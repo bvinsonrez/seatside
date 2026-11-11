@@ -98,3 +98,7 @@ test('seat links in the crowd match the order data', () => {
     if (f.link.kind === 'no-seat') expect(f.seat).toBeNull();
   }
 });
+
+test('both sport packs are registered', () => {
+  expect(Object.keys(packs).sort()).toEqual(['basketball', 'hockey']);
+});

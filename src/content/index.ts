@@ -1,4 +1,5 @@
 import type { ContentPack, SportId } from '../types';
 import { hockey } from './hockey';
+import { basketball } from './basketball';
 
-export const packs: Partial<Record<SportId, ContentPack>> & { hockey: ContentPack } = { hockey };
+export const packs: Record<SportId, ContentPack> = { hockey, basketball };
